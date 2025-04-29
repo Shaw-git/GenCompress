@@ -1,8 +1,6 @@
-# GenCompress: Keyframe Compression and Latent Diffusion Model
+# GenCompress: Generative Latent Diffusion for Efficient Spatiotemporal Data Reduction
 
 ## Overview
-
-GenCompress is a framework developed for compressing keyframes using a keyframe compressor and generating new latent representations using a latent diffusion model. The framework also ensures that the user-defined error bound is met through a post-processing error-bound guarantee.
 
 ### Main Contributions
 
@@ -17,12 +15,6 @@ GenCompress is a framework developed for compressing keyframes using a keyframe 
 - **Artifact 3 (𝐴3)**: Performance comparison on the JHTDB dataset.
 - **Artifact 4 (𝐴4)**: Inference speed for encoding and decoding.
 
-### Expected Reproduction Time
-
-- **Keyframe Compressor Training (𝐶1)**: 480 minutes on an NVIDIA A100 GPU.
-- **Latent Diffusion Model Training (𝐶2)**: 1200 minutes on an NVIDIA A100 GPU.
-- **Model Inference**: Approximately 5 minutes.
-
 ### Artifact Setup
 
 #### Hardware
@@ -31,18 +23,23 @@ All experiments were conducted on a system equipped with:
 - 4-core CPU
 
 #### Software
-- **PyTorch 2.2.0**
+- torch==2.2.0
+- torchvision==0.15.0
+- einops==0.6.0
+- einops-exts==0.0.1
+- rotary-embedding-torch==0.2.0
+- numpy==1.24.0
+- Pillow==9.5.0
+- tqdm==4.64.1
+- zstandard==0.21.0
+- collections==3.0.1
+- huffman==0.4.0
+- scikit-learn==1.2.1
 
 #### Datasets / Inputs
-- **E3SM**: Spatiotemporal simulation data.
-  - Training 𝐶1: 256x256 blocks are randomly cropped from the original data.
-  - For smaller datasets, reflection padding is applied to adjust the data dimensions.
-  - Input is normalized to zero mean and unit range before being fed into the network.
-
-- **S3D**: Scientific simulation dataset, available [here](https://link_to_s3d_dataset).
+- **E3SM**: Spatiotemporal climate simulation data , available [here](https://link_to_s3d_dataset).
+- **S3D**: Scientific combustion simulation dataset, available [here](https://link_to_s3d_dataset).
 - **JHTDB**: High-fidelity turbulence simulation dataset, available [here](https://link_to_jhtdb_dataset).
-
-All data preprocessing, splitting, and normalization scripts are available in our [GitHub repository](https://github.com/Shaw-git/GenCompress).
 
 ### Installation and Deployment
 
@@ -50,17 +47,22 @@ To install the required Python packages and dependencies, run the following comm
 
 ```bash
 pip install -r requirements.txt
+```
 
-
-### Model Trainining
+#### Model Training
 
 To train the keyframe compressor, use the following command:
 
 ```bash
 bash train_model2d.sh
-
+```
 
 To train the latent diffusion model, use the following command:
 
 ```bash
 bash train_model.sh
+```
+
+#### Model Evaluation
+evaluate.ipynb
+
