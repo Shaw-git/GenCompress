@@ -15,12 +15,6 @@
 - **Artifact 3 (𝐴3)**: Performance comparison on the JHTDB dataset.
 - **Artifact 4 (𝐴4)**: Inference speed for encoding and decoding.
 
-### Expected Reproduction Time
-
-- **Keyframe Compressor Training (𝐶1)**: 480 minutes on an NVIDIA A100 GPU.
-- **Latent Diffusion Model Training (𝐶2)**: 1200 minutes on an NVIDIA A100 GPU.
-- **Model Inference**: Approximately 5 minutes.
-
 ### Artifact Setup
 
 #### Hardware
