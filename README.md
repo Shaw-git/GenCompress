@@ -59,5 +59,5 @@ bash train_model.sh
 ```
 
 #### Model Evaluation
-
+evaluate.ipynb
 
