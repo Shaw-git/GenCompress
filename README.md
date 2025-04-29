@@ -1,4 +1,4 @@
-# GenCompress: Keyframe Compression and Latent Diffusion Model
+# GenCompress: Generative Latent Diffusion for Efficient Spatiotemporal Data Reduction
 
 ## Overview
 
