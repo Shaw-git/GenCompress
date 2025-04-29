@@ -29,7 +29,18 @@ All experiments were conducted on a system equipped with:
 - 4-core CPU
 
 #### Software
-- **PyTorch 2.2.0**
+- torch==2.2.0
+- torchvision==0.15.0
+- einops==0.6.0
+- einops-exts==0.0.1
+- rotary-embedding-torch==0.2.0
+- numpy==1.24.0
+- Pillow==9.5.0
+- tqdm==4.64.1
+- zstandard==0.21.0
+- collections==3.0.1
+- huffman==0.4.0
+- scikit-learn==1.2.1
 
 #### Datasets / Inputs
 - **E3SM**: Spatiotemporal climate simulation data , available [here](https://link_to_s3d_dataset).
