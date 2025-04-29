@@ -24,7 +24,6 @@ class Climate240(BaseDataset):
         self.dataset_name = "E3SM"
         seq = args["seq"] if "seq" in args else [8]
         var = args["var"] if "var" in args else [0]
-        
         self.downsampling  = args["downsampling"] if "downsampling" in args else 1
         
         all_data = []
@@ -43,11 +42,10 @@ class Climate240(BaseDataset):
         
         print("self.data_input:",self.data_input.shape)
 
-        self.uniform_data_preprocessing()
-
-        self.data_input, self.var_mean, self.var_scale = normalize_data(self.data_input, self.norm_type, axis=(1,2,3,4))
-        
+        # self.uniform_data_preprocessing()
+        # self.data_input, self.var_mean, self.var_scale = normalize_data(self.data_input, self.norm_type, axis=(1,2,3,4))
         # self.data_input = self.blocking_data(self.data_input)
+        
         self.data_input = torch.FloatTensor(self.data_input)
         
         self.shape = self.data_input.shape

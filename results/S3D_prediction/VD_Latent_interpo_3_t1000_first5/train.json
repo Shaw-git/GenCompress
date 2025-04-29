@@ -1,0 +1,16 @@
+{
+    "argument": {
+        "time_steps": 1000,
+        "interpo_rate": 3,
+        "iterations": 300,
+        "pretrain": "/home/xiao.li/DiffusionModel/results/S3D/VD_Latent_Original_InstNorm_16_S3D_pretrain_t1000_interpo_3/model-30.pt",
+        "keyframe_pretrain": "/home/xiao.li/DiffusionModel/snapshots/MaskedAE/NoMask/model_bs16_ep500k.pt",
+        "train_set": "E3SM",
+        "test_set": "E3SM",
+        "config": "./configs/config_latent.yaml",
+        "input_size": 256,
+        "n_frame": 16
+    },
+    "0": 0.025064582005143166,
+    "200": 0.00044845748925581574
+}

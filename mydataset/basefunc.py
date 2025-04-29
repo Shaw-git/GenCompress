@@ -175,6 +175,7 @@ class BaseDataset(Dataset):
                 assert(scale != 0)
                 
             data = (data-offset)/scale
+            
         elif self.norm_type =="range2":
             dmin = data.min()
             dmax = data.max()
@@ -183,11 +184,20 @@ class BaseDataset(Dataset):
             data = (data - offset)/scale
             if scale == 0.0:
                 assert(scale != 0)
+        
+        elif self.norm_type == "range_hw":
+            offset = torch.mean(data, dim=(-2, -1), keepdim=True)
+            scale = torch.amax(data, dim=(-2, -1), keepdim=True) - torch.amin(data, dim=(-2, -1), keepdim=True)
+            # avoid division by zero
+            assert torch.all(scale != 0), "Scale is zero in some elements."
+            data = (data - offset) / scale
+            
                 
         else:
+            print(self.norm_type)
             NotImplementError
             
         if return_norm:
-            return data, offset.item(), scale.item()
+            return data, offset, scale
         
         return data
