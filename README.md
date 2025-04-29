@@ -32,15 +32,9 @@ All experiments were conducted on a system equipped with:
 - **PyTorch 2.2.0**
 
 #### Datasets / Inputs
-- **E3SM**: Spatiotemporal simulation data.
-  - Training 𝐶1: 256x256 blocks are randomly cropped from the original data.
-  - For smaller datasets, reflection padding is applied to adjust the data dimensions.
-  - Input is normalized to zero mean and unit range before being fed into the network.
-
-- **S3D**: Scientific simulation dataset, available [here](https://link_to_s3d_dataset).
+- **E3SM**: Spatiotemporal climate simulation data , available [here](https://link_to_s3d_dataset).
+- **S3D**: Scientific combustion simulation dataset, available [here](https://link_to_s3d_dataset).
 - **JHTDB**: High-fidelity turbulence simulation dataset, available [here](https://link_to_jhtdb_dataset).
-
-All data preprocessing, splitting, and normalization scripts are available in our [GitHub repository](https://github.com/Shaw-git/GenCompress).
 
 ### Installation and Deployment
 
@@ -50,7 +44,7 @@ To install the required Python packages and dependencies, run the following comm
 pip install -r requirements.txt
 ```
 
-#### Model Trainining
+#### Model Training
 
 To train the keyframe compressor, use the following command:
 
@@ -63,3 +57,7 @@ To train the latent diffusion model, use the following command:
 ```bash
 bash train_model.sh
 ```
+
+#### Model Evaluation
+
+
