@@ -2,8 +2,6 @@
 
 ## Overview
 
-GenCompress is a framework developed for compressing keyframes using a keyframe compressor and generating new latent representations using a latent diffusion model. The framework also ensures that the user-defined error bound is met through a post-processing error-bound guarantee.
-
 ### Main Contributions
 
 1. **Keyframe Compressor (𝐶1)**: Compresses each keyframe into a latent space.
@@ -50,17 +48,18 @@ To install the required Python packages and dependencies, run the following comm
 
 ```bash
 pip install -r requirements.txt
+```
 
-
-### Model Trainining
+#### Model Trainining
 
 To train the keyframe compressor, use the following command:
 
 ```bash
 bash train_model2d.sh
-
+```
 
 To train the latent diffusion model, use the following command:
 
 ```bash
 bash train_model.sh
+```
