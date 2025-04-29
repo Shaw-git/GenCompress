@@ -1,0 +1,519 @@
+Blastnet:
+  all_vars: []
+  block_size:
+  - 8
+  - 256
+  - 256
+  data_path: /home/xiao.li/SciDatasets/Blastnet/blastnet.npz
+  inst_norm: true
+  size: 256
+  t_step: 1
+  test_norm: range
+  test_size: 256
+  test_var: []
+  train_aug:
+    randsample: 2
+  train_norm: range
+  train_var: []
+E3SM0:
+  block_size:
+  - 1
+  - 240
+  - 240
+  data_path: /blue/ranka/xiao.li/dataset/climate_dataset/dataset_numpy/00.npz
+  inst_norm: true
+  size: 240
+  t_step: 1
+  test_norm: range
+  test_size: 256
+  test_var:
+  - 0
+  - 1
+  - 2
+  - 3
+  - 4
+  train_aug:
+    randsample: 2
+  train_norm: range
+  train_var:
+  - 0
+  - 1
+  - 2
+  - 3
+  - 4
+E3SM1:
+  block_size:
+  - 1
+  - 240
+  - 240
+  data_path: /blue/ranka/xiao.li/dataset/climate_dataset/dataset_numpy/01.npz
+  inst_norm: true
+  size: 240
+  t_step: 1
+  test_norm: range
+  test_size: 256
+  test_var:
+  - 0
+  - 1
+  - 2
+  - 3
+  - 4
+  train_aug:
+    randsample: 2
+  train_norm: range
+  train_var:
+  - 0
+  - 1
+  - 2
+  - 3
+  - 4
+E3SM2:
+  block_size:
+  - 1
+  - 240
+  - 240
+  data_path: /blue/ranka/xiao.li/dataset/climate_dataset/dataset_numpy/02.npz
+  inst_norm: true
+  size: 240
+  t_step: 1
+  test_norm: range
+  test_size: 256
+  test_var:
+  - 0
+  - 1
+  - 2
+  - 3
+  - 4
+  train_aug:
+    randsample: 2
+  train_norm: range
+  train_var:
+  - 0
+  - 1
+  - 2
+  - 3
+  - 4
+E3SM3:
+  block_size:
+  - 1
+  - 240
+  - 240
+  data_path: /blue/ranka/xiao.li/dataset/climate_dataset/dataset_numpy/03.npz
+  inst_norm: true
+  size: 240
+  t_step: 1
+  test_norm: range
+  test_size: 256
+  test_var:
+  - 0
+  - 1
+  - 2
+  - 3
+  - 4
+  train_aug:
+    randsample: 2
+  train_norm: range
+  train_var:
+  - 0
+  - 1
+  - 2
+  - 3
+  - 4
+E3SM4:
+  block_size:
+  - 1
+  - 240
+  - 240
+  data_path: /blue/ranka/xiao.li/dataset/climate_dataset/dataset_numpy/04.npz
+  inst_norm: true
+  size: 240
+  t_step: 1
+  test_norm: range
+  test_size: 256
+  test_var:
+  - 0
+  - 1
+  - 2
+  - 3
+  - 4
+  train_aug:
+    randsample: 2
+  train_norm: range
+  train_var:
+  - 0
+  - 1
+  - 2
+  - 3
+  - 4
+E3SM5:
+  block_size:
+  - 1
+  - 240
+  - 240
+  data_path: /blue/ranka/xiao.li/dataset/climate_dataset/dataset_numpy/05.npz
+  inst_norm: true
+  size: 240
+  t_step: 1
+  test_norm: range
+  test_size: 256
+  test_var:
+  - 0
+  - 1
+  - 2
+  - 3
+  - 4
+  train_aug:
+    randsample: 2
+  train_norm: range
+  train_var:
+  - 0
+  - 1
+  - 2
+  - 3
+  - 4
+E3SM6:
+  block_size:
+  - 1
+  - 240
+  - 240
+  data_path: /blue/ranka/xiao.li/dataset/climate_dataset/dataset_numpy/06.npz
+  inst_norm: true
+  size: 240
+  t_step: 1
+  test_norm: range
+  test_size: 256
+  test_var:
+  - 0
+  - 1
+  - 2
+  - 3
+  - 4
+  train_aug:
+    randsample: 2
+  train_norm: range
+  train_var:
+  - 0
+  - 1
+  - 2
+  - 3
+  - 4
+E3SM7:
+  block_size:
+  - 1
+  - 240
+  - 240
+  data_path: /blue/ranka/xiao.li/dataset/climate_dataset/dataset_numpy/07.npz
+  inst_norm: true
+  size: 240
+  t_step: 1
+  test_norm: range
+  test_size: 256
+  test_var:
+  - 0
+  - 1
+  - 2
+  - 3
+  - 4
+  train_aug:
+    randsample: 2
+  train_norm: range
+  train_var:
+  - 0
+  - 1
+  - 2
+  - 3
+  - 4
+E3SM8:
+  block_size:
+  - 1
+  - 240
+  - 240
+  data_path: /blue/ranka/xiao.li/dataset/climate_dataset/dataset_numpy/08.npz
+  inst_norm: false
+  size: 240
+  t_step: 1
+  test_norm: range
+  test_size: 256
+  test_var:
+  - 0
+  train_norm: range
+  train_var:
+  - 0
+  - 1
+  - 2
+  - 3
+  - 4
+ERA5:
+  all_vars: []
+  block_size:
+  - 8
+  - 300
+  - 402
+  data_path: /home/xiao.li/SciDatasets/ERA5/era5_t.npz
+  inst_norm: true
+  size: 402
+  t_step: 1
+  test_norm: range
+  test_size: 256
+  test_var: []
+  train_aug:
+    randsample: 2
+  train_norm: range
+  train_var: []
+Hurricane:
+  all_vars:
+  - pressure
+  - temperature
+  data_path: /home/xiao.li/SciDatasets/Hurricane/data
+  inst_norm: true
+  size: 500
+  t_step: 1
+  test_norm: range
+  test_size: 500
+  test_var:
+  - pressure
+  train_aug:
+    randsample: 2
+  train_norm: range
+  train_var:
+  - pressure
+  - temperature
+JHTDB:
+  all_vars:
+  - Pressure_0001
+  - xcoor
+  - ycoor
+  - zcoor
+  block_size:
+  - 8
+  - 256
+  - 256
+  data_path: /home/xiao.li/SciDatasets/JHTDB
+  inst_norm: true
+  size: 512
+  t_step: 1
+  test_norm: range
+  test_size: 256
+  test_var:
+  - isotropic_16
+  train_aug:
+    randsample: 2
+  train_norm: range
+  train_var:
+  - isotropic_48
+NYX:
+  all_vars:
+  - baryon_density
+  - dark_matter_density
+  - temperature
+  - velocity_x
+  - velocity_y
+  - velocity_z
+  block_size:
+  - 8
+  - 512
+  - 512
+  data_path: /home/xiao.li/SciDatasets/NYX/Nyx/NVB_C009_l10n512_S12345T692_z42.hdf5
+  inst_norm: true
+  size: 512
+  t_step: 1
+  test_norm: range
+  test_size: 512
+  test_var:
+  - dark_matter_density
+  train_aug:
+    randsample: 2
+  train_norm: range
+  train_var:
+  - baryon_density
+  - temperature
+S3D:
+  data_path: /home/xiao.li/ClimateModeling/shared_fdmodel/s3d/dataset/S3D/1.dataSet/nHep58/input_150to200steps.npy
+  inst_norm: true
+  size: 640
+  t_step: 1
+  test_norm: range
+  test_size: 640
+  test_var:
+  - 7
+  total_frame: 50
+  train_aug:
+    randsample: 2
+  train_norm: range
+  train_var:
+  - 10
+  - 11
+  - 12
+  - 13
+  - 14
+  - 15
+  - 16
+  - 17
+  - 18
+  - 19
+  - 20
+  - 21
+  - 22
+  - 23
+  - 24
+  - 25
+  - 26
+  - 27
+  - 28
+  - 29
+  - 30
+  - 31
+  - 32
+  - 33
+  - 34
+  - 35
+  - 36
+  - 37
+  - 38
+  - 39
+  - 40
+  - 41
+  - 42
+  - 43
+  - 44
+  - 45
+  - 46
+  - 47
+  - 48
+  - 49
+  - 50
+  - 51
+  - 52
+  - 53
+  - 54
+  - 55
+  - 56
+  - 57
+S3D300:
+  block_size:
+  - 8
+  - 256
+  - 256
+  data_path: /home/xiao.li/SciDatasets/S3D/1.dataSet/nHep58
+  inst_norm: true
+  size: 512
+  t_step: 1
+  test_norm: range
+  test_size: 256
+  test_var:
+  - 8
+  total_frame:
+  - 150
+  - 198
+  train_aug:
+    randsample: 2
+  train_norm: range
+  train_var:
+  - 10
+  - 11
+  - 12
+  - 13
+  - 14
+  - 15
+  - 16
+  - 17
+  - 18
+  - 19
+  - 20
+  - 21
+  - 22
+  - 23
+  - 24
+  - 25
+  - 26
+  - 27
+  - 28
+  - 29
+  - 30
+  - 31
+  - 32
+  - 33
+  - 34
+  - 35
+  - 36
+  - 37
+  - 38
+  - 39
+  - 40
+  - 41
+  - 42
+  - 43
+  - 44
+  - 45
+  - 46
+  - 47
+  - 48
+  - 49
+  - 50
+  - 51
+  - 52
+  - 53
+  - 54
+  - 55
+  - 56
+  - 57
+Sunquake:
+  all_vars: []
+  block_size:
+  - 8
+  - 256
+  - 256
+  data_path: /home/xiao.li/SciDatasets/Sunquake/sunquake.npz
+  inst_norm: true
+  size: 256
+  t_step: 1
+  test_norm: range
+  test_size: 256
+  test_var: []
+  train_aug:
+    randsample: 2
+  train_norm: range
+  train_var: []
+Video:
+  all_vars:
+  - 0
+  - 1
+  - 2
+  - 3
+  - 4
+  - 5
+  - 6
+  - 7
+  - 8
+  - 9
+  data_path: /home/xiao.li/SciDatasets/Video/vimeo_septuplet/output_interp2frame/
+  inst_norm: true
+  size: 448
+  t_step: 1
+  test_norm: range
+  test_size: 256
+  test_var:
+  - 0
+  train_aug: {}
+  train_norm: range
+  train_var:
+  - 0
+  - 1
+  - 2
+  - 3
+  - 4
+  - 5
+  - 6
+  - 7
+  - 8
+  - 9
+  - 10
+  - 11
+  - 12
+  - 13
+  - 14
+  - 15
+  - 16
+  - 17
+  - 18
+  - 19
