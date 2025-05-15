@@ -25,17 +25,32 @@ def save_json(json_pth, data):
     with open(json_pth, 'w') as json_file:
         json.dump(data, json_file, indent=4)
 
-def relative_rmse_error_ornl(x, y):
-    """Compute the relative RMSE between two arrays."""
+def relative_rmse_error_ornl(x, y, axis=(1, 2, 3, 4)):
+    """Compute the relative RMSE between two arrays or tensors, returns a list of floats per batch."""
     try:
         assert x.shape == y.shape
     except:
         print("x.shape != y.shape", x.shape, y.shape)
+    
+    if isinstance(x, torch.Tensor):
+        mse  = torch.mean((x - y) ** 2, dim=axis, keepdim=True)
+        maxv = torch.amax(x, dim=axis, keepdim=True)
+        minv = torch.amin(x, dim=axis, keepdim=True)
+        error = torch.sqrt(mse) / (maxv - minv + 1e-8)
+        return error.view(-1).cpu().tolist()  # flatten and convert to list of floats
+
+    elif isinstance(x, np.ndarray):
+        mse  = np.mean((x - y) ** 2, axis=axis, keepdims=True)
+        maxv = np.amax(x, axis=axis, keepdims=True)
+        minv = np.amin(x, axis=axis, keepdims=True)
+        error = np.sqrt(mse) / (maxv - minv + 1e-8)
+        return error.reshape(-1).tolist()  # flatten and convert to list
+
+    else:
+        raise TypeError(f"Unsupported type: {type(x)}")
+
+
         
-    mse = np.mean((x - y)**2)
-    maxv = np.max(x)
-    minv = np.min(x)
-    return np.sqrt(mse) / (maxv - minv)
 
 def depadding(data, max_size):
     shape = data.shape
@@ -54,16 +69,13 @@ def train_epoch_vae(model, loader, optimizer, scheduler, criterion, loss_beta, d
     
     for data_dict in loader:
         
-        inputs  = data_dict["input"][:, None].to(device)
-        targets = data_dict["label"][:, None].to(device)
-        # print(torch.sum(inputs), torch.sum(targets))
+        inputs  = data_dict["input"].to(device)
+        targets = inputs
+ 
         optimizer.zero_grad()
         results = model(inputs)
         
         outputs = results["output"]
-        
-        # outputs = depadding(results["output"], max_size = 240)
-        # targets = depadding(inputs, max_size = 240)
         
         loss_mse = criterion(outputs, targets)
         loss_bpp = results["bpp"].mean()
@@ -90,32 +102,26 @@ def test_epoch_vae(model, loader, criterion, device):
     """Test the model and compute the reconstruction results."""
     model.eval()
     all_data = []
-    all_result = []
-    all_bpp = []
     
-    true_shape = loader.dataset.true_shape
+    recons_data = torch.zeros_like(loader.dataset.data_input)
+
+    
+    bit_count = 0
     
     with torch.no_grad():
         for data_dict in loader:
-            
-            inputs  = data_dict["input"][:, None].to(device)
-            targets = data_dict["label"][:, None].numpy()
-            
-            results = model(inputs.to(device))
-            
-            outputs = results["output"].cpu().detach().numpy()
-            
-            outputs = depadding(outputs, true_shape)
-            targets = depadding(targets, true_shape)
-        
-            
-            all_data.append(targets)
-            all_result.append(outputs)
-            all_bpp.append(results["bpp"].cpu().detach().numpy())
-    
-    all_bpp = np.concatenate(all_bpp)
-    return np.concatenate(all_data), np.concatenate(all_result), all_bpp
+            inputs  = data_dict["input"].to(device)
+            targets = data_dict["input"].cpu()
 
+            results = model(inputs)
+            outputs = results["output"].detach().cpu()*data_dict["scale"] + data_dict["offset"]
+            bit_count += torch.sum(results["frame_bit"].detach().cpu()).item()
+
+            for i in range(len(inputs)):
+                idx0, idx1, start_t, end_t = data_dict["index"]
+                recons_data[idx0[i], idx1[i], start_t[i]:end_t[i]] = outputs[i]
+
+    return recons_data, bit_count
 
 class Info:
     def __init__(self,data_name, bpp = 32, model_path = None, json_path =None):
@@ -161,13 +167,39 @@ class Info:
             
         self.save_json()
         
+def get_argument():
+    parser = argparse.ArgumentParser(description="Train a UNet with Channel Attention model.")
+    parser.add_argument('--batch_size', type=int, default=64, help='Batch size for training')
+    parser.add_argument('--save_path', type=str, default="./snapshots/E3SM/E3SM_VAE", help='Path to save model and results')
+    # parser.add_argument('--epochs', type=int, default=600, help='Number of epochs for training')
+    parser.add_argument('--iterations', type=int, default=400, help='Number of epochs for training')
+    parser.add_argument('--begin_sr', type=int, default=0, help='Number of epochs for training')
+    parser.add_argument('--sr_type', type=str, default="BCRN", help='Number of epochs for training')
+    parser.add_argument('--lr', type=float, default=0.001, help='Learning rate')
+    # parser.add_argument('--lr_milestones', type=int, nargs='+', default=[100, 450], help='Learning rate milestones')
+    parser.add_argument('--lr_gamma', type=float, default=0.5, help='Learning rate gamma')
+    
+    parser.add_argument('--init_beta', type=float, default=1e-5, help='loss beta')
+    parser.add_argument('--end_beta', type=float, default=2e-5, help='loss beta')
+    
+    parser.add_argument('--beta_start', type=float, default=0.75, help='loss beta')
+    parser.add_argument('--model_dim', type=int, default=16, help='loss beta')
+    parser.add_argument('--pretrain', type=str, default="", help='pretrain path')
+    
+    # Datatset
+    parser.add_argument('--train_set', type=str, default="S3D")
+    parser.add_argument('--test_set', type=str, default="E3SM_test")
+    parser.add_argument('--config', type=str, default="./configs/config_vae.yaml")
+
+    args = parser.parse_args()
+    
         
+    return args
+
         
 
 if __name__ == "__main__":
     args = get_argument()
-    
-    
     
     save_path = args.save_path
 
@@ -175,7 +207,7 @@ if __name__ == "__main__":
     if not os.path.exists(save_path):
         os.makedirs(save_path)
     
-    shutil.copy(args.config, save_path+"/config.yaml")
+    shutil.copy(args.config, save_path+"/config_vae.yaml")
 
     # Paths for model and JSON files
     model_path = os.path.join(save_path, f"model_bs{args.batch_size}_ep{args.iterations}k.pt")
@@ -185,6 +217,10 @@ if __name__ == "__main__":
     save_json(json_path, {"argument":vars(args)})
 
     train_args = convert_args(args, train=True)
+    
+    print(train_args)
+    
+    
     train_datasets = build_dataset(train_args, syn_length = True)
     print("Length for Each dataset", [len(dataset) for dataset in train_datasets])
     merged_dataset = ConcatDataset(train_datasets)
@@ -250,7 +286,6 @@ if __name__ == "__main__":
         train_loss = mse_loss + bbp_loss
         
         
-        
     
         eval_index = cur_iters // (args.iterations//100)
         if not is_eval[eval_index]:
@@ -258,20 +293,24 @@ if __name__ == "__main__":
           
         
             for test_loader in test_loaders:
-                dname = test_loader.dataset.dataset_name
+                cur_dataset = test_loader.dataset
+                dname = cur_dataset.dataset_name
+                original_data = cur_dataset.original_data()
                 
-                original_data, recons_data, bpp = test_epoch_vae(model, test_loader, criterion, device)
-                bpp = float(np.mean(bpp))
-
+                recons_data, bit_count = test_epoch_vae(model, test_loader, criterion, device)
+                recons_data = cur_dataset.deblocking_hw(recons_data)
+                
+                bpp = float(bit_count/np.prod(recons_data.shape))
+                
                 nrmse = relative_rmse_error_ornl(original_data, recons_data)
-                nrmse = float(nrmse)
+                nrmse = float(nrmse[0])
 
                 loggers[dname].update(model, cur_iters, nrmse, bpp, dname)
                 
                 loggers[dname].save_last_model(model)
                 
                 print(dname, f"Progress: {eval_index}/100 ,  Iter {cur_iters}, Train Loss: {train_loss:.6f} ({mse_loss:.6f} + {bbp_loss:.6f})", 
-                             f"NRMSE: {nrmse:.6f}  BPP: {bpp:.6f} CR: {32/bpp:.6f}")
+                             "NRMSE:",nrmse, f"BPP: {bpp:.6f} CR: {32/bpp:.6f}")
                 
                 total_time = time.time() - start_time
                 remaining_time = (args.iterations - cur_iters) * (total_time/cur_iters)

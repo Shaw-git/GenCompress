@@ -98,19 +98,23 @@ class Compressor(nn.Module):
             
         hyper_rate = -self.prior.likelihood(q_hyper_latent).log2()
         cond_rate = -latent_distribution.likelihood(q_latent).log2()
-        bpp = (hyper_rate.sum(dim=(1, 2, 3)) + cond_rate.sum(dim=(1, 2, 3))) / (H * W)
-        return bpp
+        
+        frame_bit = (hyper_rate.sum(dim=(1, 2, 3)) + cond_rate.sum(dim=(1, 2, 3)))
+        bpp = frame_bit / (H * W)
+        
+        return frame_bit, bpp
 
     def forward(self, input):
         B,C,T,H,W = input.shape
         input = input.reshape([-1,1,H,W])
         q_latent, q_hyper_latent, state4bpp = self.encode(input)
-        bpp = self.bpp(input.shape, state4bpp)
+        frame_bit, bpp = self.bpp(input.shape, state4bpp)
         output = self.decode(q_latent)
         output = output.reshape([B,C,T,H,W])
         return {
             "output": output,
             "bpp": bpp,
+            "frame_bit":frame_bit,
             "q_latent": q_latent,
             "q_hyper_latent": q_hyper_latent,
             "latent":state4bpp["latent"],

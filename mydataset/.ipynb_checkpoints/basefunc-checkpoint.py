@@ -5,6 +5,110 @@ import torchvision.transforms as T
 from copy import deepcopy
 import numpy as np
 
+import torch
+import torch.nn.functional as F
+import math
+
+
+def block_hw(data, block_size=(256, 256)):
+    V, S, T, H, W = data.shape
+    h_block, w_block = block_size
+
+    # Compute padding for height to nearest multiple of h_block
+    H_target = math.ceil(H / h_block) * h_block
+    dh = H_target - H
+    top, down = dh // 2, dh - dh // 2
+    n_h = H_target // h_block
+
+    # Compute padding for width to nearest multiple of w_block
+    W_target = math.ceil(W / w_block) * w_block
+    dw = W_target - W
+    left, right = dw // 2, dw - dw // 2
+    n_w = W_target // w_block
+
+    # Apply reflection padding (order: W_left, W_right, H_top, H_bottom)
+    data = F.pad(data, (left, right, top, down), mode='reflect')
+
+    # Update shape after padding
+    V, S, T, H_p, W_p = data.shape
+
+    # Reshape and split along H and W into blocks
+    data = data.reshape(V, S, T, n_h, h_block, n_w, w_block)
+    data = data.permute(0, 1, 3, 5, 2, 4, 6)  # [V, S, n_h, n_w, T, h_block, w_block]
+    data = data.reshape(V, S * n_h * n_w, T, h_block, w_block)
+
+    padding = (top, down, left, right)
+    return data, (n_h, n_w, padding)
+
+
+def deblock_hw(data, n_h, n_w, padding):
+    V, S_blk, T, h_block, w_block = data.shape
+    top, down, left, right = padding
+
+    S_orig = S_blk // (n_h * n_w)
+
+    # Reshape to original split
+    data = data.reshape(V, S_orig, n_h, n_w, T, h_block, w_block)
+    data = data.permute(0, 1, 4, 2, 5, 3, 6)
+    data = data.reshape(V, S_orig, T, n_h * h_block, n_w * w_block)
+
+    # Remove padding
+    H_p, W_p = n_h * h_block, n_w * w_block
+    H = H_p - top - down
+    W = W_p - left - right
+
+    data = data[:, :, :, top:top+H, left:left+W]
+
+    return data
+
+
+
+def normalize_data(data, norm_type, axis):
+    """
+    Normalize data according to the specified normalization type.
+
+    Args:
+        data (np.ndarray): Input data array.
+        norm_type (str): Type of normalization ('std', 'min_max', 'mean_range').
+        axis (tuple or int): Axis or axes along which to compute statistics.
+
+    Returns:
+        tuple: (normalized_data, var_mean, var_scale)
+    """
+    norm_type = norm_type.lower()
+
+    if not isinstance(data, np.ndarray):
+        raise TypeError("Input data must be a numpy ndarray.")
+
+    if norm_type == "std":
+        var_mean = np.mean(data, axis=axis, keepdims=True)
+        var_scale = np.std(data, axis=axis, keepdims=True)
+        normalized_data = (data - var_mean) / var_scale
+
+    elif norm_type == "min_max":
+        var_min = np.min(data, axis=axis, keepdims=True)
+        var_max = np.max(data, axis=axis, keepdims=True)
+        var_range = var_max - var_min
+
+        var_mean = var_min + var_range / 2
+        var_scale = var_range / 2
+
+        normalized_data = (data - var_mean) / var_scale
+
+    elif norm_type == "mean_range":
+        var_mean = np.mean(data, axis=axis, keepdims=True)
+        var_max = np.max(data, axis=axis, keepdims=True)
+        var_min = np.min(data, axis=axis, keepdims=True)
+        var_scale = var_max - var_min
+
+        normalized_data = (data - var_mean) / var_scale
+
+    else:
+        raise NotImplementedError(f"Normalization type '{norm_type}' is not implemented.")
+
+    return normalized_data, var_mean, var_scale
+
+
 class BaseDataset(Dataset):
     
     def __init__(self, args):
@@ -166,38 +270,31 @@ class BaseDataset(Dataset):
             
         return data
     
-    def apply_inst_norm(self, data, return_norm = False):
-        
-        if self.norm_type =="range":
-            offset = torch.mean(data)
-            scale = data.max() - data.min()
-            if scale == 0.0:
-                assert(scale != 0)
-                
-            data = (data-offset)/scale
-            
-        elif self.norm_type =="range2":
-            dmin = data.min()
-            dmax = data.max()
-            offset = (dmax + dmin)/2
-            scale = (dmax - dmin)/2
-            data = (data - offset)/scale
-            if scale == 0.0:
-                assert(scale != 0)
-        
-        elif self.norm_type == "range_hw":
-            offset = torch.mean(data, dim=(-2, -1), keepdim=True)
-            scale = torch.amax(data, dim=(-2, -1), keepdim=True) - torch.amin(data, dim=(-2, -1), keepdim=True)
-            # avoid division by zero
+    def apply_inst_norm(self, data, return_norm=False):
+        if self.norm_type == "mean_range":
+            offset = torch.mean(data, keepdim=True)
+            scale = data.max(keepdim=True).values - data.min(keepdim=True).values
             assert torch.all(scale != 0), "Scale is zero in some elements."
             data = (data - offset) / scale
-            
-                
+
+        elif self.norm_type == "min_max":
+            dmin = data.min(keepdim=True).values
+            dmax = data.max(keepdim=True).values
+            offset = (dmax + dmin) / 2
+            scale = (dmax - dmin) / 2
+            assert torch.all(scale != 0), "Scale is zero in some elements."
+            data = (data - offset) / scale
+
+        elif self.norm_type == "mean_range_hw":
+            offset = torch.mean(data, dim=(-2, -1), keepdim=True)
+            scale = torch.amax(data, dim=(-2, -1), keepdim=True) - torch.amin(data, dim=(-2, -1), keepdim=True)
+            assert torch.all(scale != 0), "Scale is zero in some elements."
+            data = (data - offset) / scale
+
         else:
-            print(self.norm_type)
-            NotImplementError
-            
+            raise NotImplementedError(f"Normalization type {self.norm_type} not implemented.")
+
         if return_norm:
             return data, offset, scale
-        
-        return data
+        else:
+            return data

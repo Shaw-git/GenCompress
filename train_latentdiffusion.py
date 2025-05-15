@@ -26,8 +26,7 @@ def load_pretrain_keyframe_model(args):
                                                 reverse_dim_mults=[4,3,2,1],
                                                 hyper_dims_mults=[4,4,4],
                                                 channels = 1,
-                                                out_channels = 1,
-                                                d3=False)
+                                                out_channels = 1)
     
     print("Load pretrain model:", args.keyframe_pretrain)
     state_dict = torch.load(args.keyframe_pretrain)
@@ -43,9 +42,17 @@ def get_args():
     parser.add_argument("--time_steps", type=int, default=1000, help="Number of time steps")
     parser.add_argument("--interpo_rate", type=int, default=3, help="Interpolation rate")
     parser.add_argument("--iterations", type=int, default=300, help="iterations")
-    parser.add_argument("--pretrain", type=str, default="/home/xiao.li/DiffusionModel/results/S3D/VD_Latent_Original_InstNorm_16_S3D_pretrain_t1000_interpo_3/model-30.pt", help="Path to the pre-trained model")
     
-    parser.add_argument("--keyframe_pretrain", type=str, default="/home/xiao.li/DiffusionModel/snapshots/MaskedAE/NoMask/model_bs16_ep500k.pt",
+    parser.add_argument("--pretrain", type=str, 
+                        default="/home/xiao.li/DiffusionModel/results/S3D/VD_Latent_Original_InstNorm_16_S3D_pretrain_t1000_interpo_3/model-30.pt", 
+                        help="Path to the pre-trained model")
+    
+    parser.add_argument("--keyframe_pretrain", type=str, 
+                        default="/home/xiao.li/DiffusionModel/snapshots/MaskedAE/NoMask/model_bs16_ep500k.pt",
+                        help="Path to the pre-trained keyframe model")
+    
+    parser.add_argument("--result_path", type=str, 
+                        default="./snapshots/latent_model/e3sm/SHPJ_BlockInstNorm",
                         help="Path to the pre-trained keyframe model")
     
     # Datatset
@@ -53,23 +60,18 @@ def get_args():
     parser.add_argument('--test_set', type=str, default="E3SM")
     parser.add_argument('--config', type=str, default="./configs/config_latent.yaml")
     # parser.add_argument('--syn_length', type=int, default=0)
-
-    parser.add_argument('--input_size', type=int, default=256, help='data size')
-    parser.add_argument('--n_frame', type=str, default="16", help='data size')
     
     args = parser.parse_args()
+
+    args.result_path = args.result_path+"%d_Steps_%d_Interpo"%(args.time_steps, args.interpo_rate)   
     
-    args.n_frame =  np.asarray(args.n_frame.split(","), dtype = np.int32).tolist()
-    if len(args.n_frame) == 1:
-        args.n_frame = args.n_frame[0]
-        
     return args
 
     
 if __name__ == "__main__":
+    
     args = get_args()
-   
-    results_folder = "./results/S3D_prediction/VD_Latent_interpo_%d_t%d_first5"%(args.interpo_rate, args.time_steps)
+    results_folder = args.result_path
     
     keyframe_model = load_pretrain_keyframe_model(args).cuda()
     
@@ -97,7 +99,8 @@ if __name__ == "__main__":
     
     train_args = convert_args(args, train=True)
     train_datasets = build_dataset(train_args, syn_length = True)
-    print("Length for Each dataset", [len(dataset) for dataset in train_datasets])
+    
+    print("Length for Each Dataset", [len(dataset) for dataset in train_datasets])
     dataset = ConcatDataset(train_datasets)
     
 
