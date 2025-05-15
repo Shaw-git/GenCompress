@@ -112,19 +112,6 @@ class Compressor(nn.Module):
         return x
     
     
-    def inference_qlatent(self, x):
-        B,C,N,H,W = x.shape
-        x  = x.permute(0,2,1,3,4).view(B*N,C,H,W)
-        latent = self.encode(x)
-        hyper_latent = self.hyper_encode(latent)
-        q_hyper_latent = quantize(hyper_latent, "dequantize", self.prior.medians)
-        mean, scale = self.hyper_decode(q_hyper_latent)    
-        q_latent = quantize(latent, "dequantize", mean)
-        q_latent = q_latent.view(B,N, *q_latent.shape[1:]).permute(0,2,1,3,4)
-        return q_latent
-    
-    
-    
     def bpp(self, shape, state4bpp):
         B, _, H, W = shape
         latent = state4bpp["latent"]

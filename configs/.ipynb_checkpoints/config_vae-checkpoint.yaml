@@ -1,5 +1,5 @@
 E3SM:
-  data_path: /blue/ranka/shared-xiaoli/ScientificDataset/E3SM/e3sm_0.npz
+  data_path: /blue/ranka/shared-xiaoli/ScientificDataset/E3SM/e3sm.npz
   test_subset:
     frame_range:
     - 5760
@@ -22,30 +22,6 @@ E3SM:
     - 2
     - 3
     - 4
-E3SM_test:
-  data_path: /blue/ranka/shared-xiaoli/ScientificDataset/E3SM/e3sm_1.npz
-  test_subset:
-    frame_range:
-    - 0
-    - 720
-    section_range:
-    - 0
-    - 6
-    variable_idx:
-    - 0
-  train_subset:
-    frame_range:
-    - 0
-    - 3600
-    section_range:
-    - 0
-    - 6
-    variable_idx:
-    - 0
-    - 1
-    - 2
-    - 3
-    - 4
 ERA5:
   data_path: /blue/ranka/shared-xiaoli/ScientificDataset/ERA5/era5.npz
   test_subset:
@@ -59,71 +35,47 @@ ERA5:
 Hurricane:
   data_path: /blue/ranka/shared-xiaoli/ScientificDataset/Hurricane/hurricane.npz
   test_subset:
-    frame_range:
-    - 0
-    - 47
-    section_range:
-    - 24
-    - 32
-    variable_idx:
-    - 0
+    frame_range: null
+    section_range: null
+    variable_idx: null
   train_subset:
-    frame_range:
-    - 0
-    - 47
-    section_range:
-    - 0
-    - 24
-    variable_idx:
-    - 0
-    - 1
-    - 2
+    frame_range: null
+    section_range: null
+    variable_idx: null
 JHTDB:
-  data_path: /blue/ranka/shared-xiaoli/ScientificDataset/JHTDB/JHTDB.npz
+  data_path: /blue/ranka/shared-xiaoli/ScientificDataset/JHTDB/jhtdb.npz
   test_subset:
     frame_range:
     - 0
     - 128
     section_range:
-    - 48
+    - 0
     - 64
     variable_idx:
     - 0
+    - 1
+    - 2
   train_subset:
     frame_range:
     - 0
     - 128
     section_range:
     - 0
-    - 48
+    - 64
     variable_idx:
     - 0
     - 1
     - 2
 PDE:
-  data_path: /blue/ranka/shared-xiaoli/ScientificDataset/PDE/PDEBench.npz
+  data_path: /blue/ranka/shared-xiaoli/ScientificDataset/PDE/pde.npz
   test_subset:
-    frame_range:
-    - 0
-    - 128
-    section_range:
-    - 12
-    - 16
-    variable_idx:
-    - 0
-    - 1
-    - 2
+    frame_range: null
+    section_range: null
+    variable_idx: null
   train_subset:
-    frame_range:
-    - 0
-    - 128
-    section_range:
-    - 0
-    - 12
-    variable_idx:
-    - 0
-    - 1
-    - 2
+    frame_range: null
+    section_range: null
+    variable_idx: null
 S3D:
   data_path: /blue/ranka/shared-xiaoli/ScientificDataset/S3D/s3d.npz
   test_subset:
@@ -193,19 +145,15 @@ S3D:
     - 57
 test_config:
   augment_type: {}
-  inst_norm: true
-  n_frame: 16
-  n_overlap: 1
-  norm_type: mean_range
-  test_size:
-  - 256
-  - 256
+  inst_norm: false
+  n_frame: 1
+  n_overlap: 0
+  norm_type: mean_range_hw
   train: false
 train_config:
   augment_type: {}
   inst_norm: true
-  n_frame: 16
-  n_overlap: 15
-  norm_type: mean_range
+  n_frame: 1
+  n_overlap: 0
+  norm_type: mean_range_hw
   train: true
-  train_size: 256

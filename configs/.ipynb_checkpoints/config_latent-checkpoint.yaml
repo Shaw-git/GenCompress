@@ -79,7 +79,7 @@ Hurricane:
     - 1
     - 2
 JHTDB:
-  data_path: /blue/ranka/shared-xiaoli/ScientificDataset/JHTDB/JHTDB.npz
+  data_path: /blue/ranka/shared-xiaoli/ScientificDataset/JHTDB/jhtdb.npz
   test_subset:
     frame_range:
     - 0
@@ -101,29 +101,15 @@ JHTDB:
     - 1
     - 2
 PDE:
-  data_path: /blue/ranka/shared-xiaoli/ScientificDataset/PDE/PDEBench.npz
+  data_path: /blue/ranka/shared-xiaoli/ScientificDataset/PDE/pde.npz
   test_subset:
-    frame_range:
-    - 0
-    - 128
-    section_range:
-    - 12
-    - 16
-    variable_idx:
-    - 0
-    - 1
-    - 2
+    frame_range: null
+    section_range: null
+    variable_idx: null
   train_subset:
-    frame_range:
-    - 0
-    - 128
-    section_range:
-    - 0
-    - 12
-    variable_idx:
-    - 0
-    - 1
-    - 2
+    frame_range: null
+    section_range: null
+    variable_idx: null
 S3D:
   data_path: /blue/ranka/shared-xiaoli/ScientificDataset/S3D/s3d.npz
   test_subset:
@@ -197,9 +183,6 @@ test_config:
   n_frame: 16
   n_overlap: 1
   norm_type: mean_range
-  test_size:
-  - 256
-  - 256
   train: false
 train_config:
   augment_type: {}
@@ -208,4 +191,3 @@ train_config:
   n_overlap: 15
   norm_type: mean_range
   train: true
-  train_size: 256
