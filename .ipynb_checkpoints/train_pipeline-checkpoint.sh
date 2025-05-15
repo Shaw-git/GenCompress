@@ -35,17 +35,17 @@ train_set="S3D"
 test_set="E3SM_test"
 
 # Run VAE2D training
-python train_vae2d.py \
-    --save_path="${vae_path}" \
-    --batch_size="${batch_size}" \
-    --iterations="${iterations}" \
-    --model_dim=16 \
-    --lr=0.0005 \
-    --beta_start=0.5 \
-    --train_set="${train_set}" \
-    --test_set="${test_set}" \
-    --init_beta=0.00001 \
-    --end_beta=0.00002
+# python train_vae2d.py \
+#     --save_path="${vae_path}" \
+#     --batch_size="${batch_size}" \
+#     --iterations="${iterations}" \
+#     --model_dim=16 \
+#     --lr=0.0005 \
+#     --beta_start=0.5 \
+#     --train_set="${train_set}" \
+#     --test_set="${test_set}" \
+#     --init_beta=0.00001 \
+#     --end_beta=0.00002
 
 # Run latent diffusion model training
 python train_latentdiffusion.py \

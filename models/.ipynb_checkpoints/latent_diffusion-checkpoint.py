@@ -903,12 +903,11 @@ class Dataset(data.Dataset):
 
 # trainer class
 def normalize_latent(x):
-    B = x.shape[0]
-    x_min = x.view(B, -1).min(dim=1, keepdim=True)[0].view(B, 1, 1, 1, 1)
-    x_max = x.view(B, -1).max(dim=1, keepdim=True)[0].view(B, 1, 1, 1, 1)
-
+    x_min = x.amin(dim=(1, 2, 3, 4), keepdim=True)
+    x_max = x.amax(dim=(1, 2, 3, 4), keepdim=True)
     x_norm = 2 * (x - x_min) / (x_max - x_min + 1e-8) - 1  # added small epsilon to avoid divide-by-zero
     return x_norm
+
 
 class Trainer(object):
     def __init__(
@@ -1018,17 +1017,12 @@ class Trainer(object):
         
         while self.step < self.train_num_steps:
             for i in range(self.gradient_accumulate_every):
-                data = next(self.dl).cuda()
-                
+                batch_data = next(self.dl)
+                data = batch_data['input'].cuda()
                 # convert input block into latent space
                 with torch.no_grad():
-                    B,C,N,H,W = data.shape
-                    assert(C==1)
-                    
-                    latent_data, _ ,_ = self.keyframe_model.encode(data.permute(0,2,1,3,4).view(B*N,C,H,W))
-                    C1,H1,W1 = latent_data.shape[-3:]
-                    latent_data = latent_data.view(B,N,C1,H1,W1)
-                    latent_data = normalize_latent(latent_data).permute(0,2,1,3,4)
+                    latent_data = self.keyframe_model.inference_qlatent(data)
+                    latent_data = normalize_latent(latent_data)
                 
                 
                 # label_data = data
