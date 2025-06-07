@@ -37,9 +37,9 @@ All experiments were conducted on a system equipped with:
 - scikit-learn==1.2.1
 
 #### Datasets / Inputs
-- **E3SM**: Spatiotemporal climate simulation data , available [here](https://link_to_s3d_dataset).
-- **S3D**: Scientific combustion simulation dataset, available [here](https://link_to_s3d_dataset).
-- **JHTDB**: High-fidelity turbulence simulation dataset, available [here](https://link_to_jhtdb_dataset).
+- **[E3SM](https://e3sm.org/)**: Spatiotemporal climate simulation.
+- [**S3D**](https://crf.sandia.gov/research/computation-and-theory/direct-numerical-simulation/): Scientific combustion simulation.
+- [**JHTDB**](https://turbulence.idies.jhu.edu/datasets): High-fidelity turbulence simulation.
 
 ### Installation and Deployment
 
