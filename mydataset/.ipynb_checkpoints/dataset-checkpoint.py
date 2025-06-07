@@ -23,6 +23,16 @@ import torch.nn.functional as F
 import math
 
 
+def center_crop(x, tshape):
+    _, _,_, H, W = x.shape
+    
+    target_h, target_w = tshape
+    start_h = (H - target_h) // 2
+    start_w = (W - target_w) // 2
+    end_h = start_h + target_h
+    end_w = start_w + target_w
+    return x[..., start_h:end_h, start_w:end_w]
+
 def downsampling_data(data, zoom_factors):
     """Apply cubic interpolation-based downsampling or upsampling."""
     return zoom(data, zoom_factors, order=3)  # order=3 = cubic interpolation
@@ -138,7 +148,7 @@ class BaseDataset(Dataset):
         self.variable_idx   = args.get("variable_idx")
         self.section_range  = args.get("section_range")
         self.frame_range    = args.get("frame_range")
-        
+        self.resolution     = args.get("resolution", None)
         
         self.train_size     = args.get("train_size", None)
         self.n_frame        = args["n_frame"]
@@ -253,6 +263,7 @@ class ScientificDataset(BaseDataset):
         self.shape = data.shape
         self.delta_t = self.n_frame - self.n_overlap
         self.t_samples = (self.shape[2] - self.n_frame) // self.delta_t + 1
+        # print(self.shape[2],self.n_frame, self.delta_t)
         assert (self.shape[2] - self.n_frame) % self.delta_t == 0, "Invalid n_frame or n_overlap config"
         
         self.data_input = data  # store as instance variable for __getitem__
@@ -277,7 +288,9 @@ class ScientificDataset(BaseDataset):
 
         with np.load(data_path) as npzfile:
             data = npzfile["data"][variable_idx, section_range, frame_range]
-            
+        
+        if self.resolution is not None:
+            data = center_crop(data, self.resolution)
         self.dtype = data.dtype
         data = data.astype(np.float32)
         return data
