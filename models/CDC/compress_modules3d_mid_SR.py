@@ -1,9 +1,8 @@
 import torch.nn as nn
 from .network_components2 import ResnetBlock, FlexiblePrior, Downsample, Upsample
 from .utils import quantize, NormalDistribution
-
+import time
 import yaml
-from .HAT import HAT
 from .BCRN.bcrn_model import BluePrintConvNeXt_SR
 import torch
 import torch.nn.init as init
@@ -13,7 +12,7 @@ def load_yaml(file_path):
         data = yaml.safe_load(file)
     return data
 
-def super_resolution_model(img_size = 64, in_chans=32, out_chans=1, sr_type = "HAT", pretrain = False):
+def super_resolution_model(img_size = 64, in_chans=32, out_chans=1, sr_dim = "HAT", pretrain = False, sr_type = "BCRN"):
     
     if sr_type == "HAT":
         yaml_file = load_yaml("./configs/HAT-S_SRx4.yml")
@@ -27,7 +26,7 @@ def super_resolution_model(img_size = 64, in_chans=32, out_chans=1, sr_type = "H
         return sr_model, loaded_params, not_loaded_params
     
     if sr_type == "BCRN":
-        sr_model = BluePrintConvNeXt_SR(in_chans, 1, 4)
+        sr_model = BluePrintConvNeXt_SR(in_chans, 1, 4, sr_dim)
         if pretrain:
             loaded_params, not_loaded_params = sr_model.load_part_model("./pretrain/BCRN_SRx4.pth")
         else:
@@ -146,7 +145,6 @@ class Compressor(nn.Module):
                 input = input.permute(0,2,1,3,4)
                 input = input.reshape(-1, *input.shape[2:]) # [b*t, 1, 256, 256]
                 
-                
             input = resnet(input)
             input = up(input)
         
@@ -167,20 +165,49 @@ class Compressor(nn.Module):
             q_latent = quantize(latent, "dequantize", latent_distribution.mean)
         hyper_rate = -self.prior.likelihood(q_hyper_latent).log2()
         cond_rate = -latent_distribution.likelihood(q_latent).log2()
+        
+        frame_bit = hyper_rate.reshape(B, -1).sum(dim=-1) + cond_rate.reshape(B, -1).sum(dim=-1)
         bpp = (hyper_rate.reshape(B, -1).sum(dim=-1) + cond_rate.reshape(B, -1).sum(dim=-1)) / n_pixels
-        return bpp
+        
+        return frame_bit, bpp
 
-    def forward(self, input):
+    def forward(self, input, return_time = False):
+        
+        result = {}
+        
+        if return_time:
+            torch.cuda.synchronize()  # Wait for all GPU ops to finish
+            start_time = time.time()
+            
         q_latent, q_hyper_latent, state4bpp, mean = self.encode(input)
-        bpp = self.bpp(input.shape, state4bpp)
+        
+        if return_time:
+            torch.cuda.synchronize()  # Wait for all GPU ops to finish
+            result["encoding_time"] = time.time() - start_time
+            
+            
+        frame_bit, bpp = self.bpp(input.shape, state4bpp)
+        
+        if return_time:
+            torch.cuda.synchronize()  # Wait for all GPU ops to finish
+            start_time = time.time()
+            
         output = self.decode(q_latent)
-        return {
+        
+        if return_time:
+            torch.cuda.synchronize()  # Wait for all GPU ops to finish
+            result["decoding_time"] = time.time() - start_time
+            
+        result.update({
             "output": output,
             "bpp": bpp,
+            "frame_bit":frame_bit,
             "mean": mean,
             "q_latent": q_latent,
             "q_hyper_latent": q_hyper_latent,
-        }
+        })
+        
+        return result
 
 
 class ResnetCompressor(Compressor):
@@ -287,7 +314,7 @@ class CompressorMix(nn.Module):
         channels=3,
         out_channels=3,
         d3=False,
-        sr_type = "BCRN"
+        sr_dim = 16
     ):
         super().__init__()  # Initialize the nn.Module parent class
 
@@ -306,17 +333,26 @@ class CompressorMix(nn.Module):
 
         # Initialize super-resolution model
         self.sr_model, self.loaded_params, self.not_loaded_params = super_resolution_model(
-            img_size=64, in_chans=channels, out_chans=out_channels, sr_type = sr_type
+            img_size=64, in_chans=channels, out_chans=out_channels, sr_type = "BCRN", sr_dim = sr_dim
         )
     
-    def forward(self, inputs):
+    def forward(self, inputs, return_time = False):
         B = inputs.shape[0]
         
-        results = self.entropy_model(inputs)
+        results = self.entropy_model(inputs, return_time)
         outputs = results["output"]
         
         # Apply super-resolution model
+        if return_time:
+            torch.cuda.synchronize()  # Wait for all GPU ops to finish
+            start_time = time.time()
+            
         outputs = self.sr_model(outputs)  # Use self.sr_model instead of sr_model
+        
+        if return_time:
+            torch.cuda.synchronize()  # Wait for all GPU ops to finish
+            results["decoding_time"] += time.time() - start_time
+            
         
         # Reshape if needed
         outputs = reshape_batch_2d_3d(outputs, B)

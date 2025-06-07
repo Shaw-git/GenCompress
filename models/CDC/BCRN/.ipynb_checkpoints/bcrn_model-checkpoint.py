@@ -22,18 +22,18 @@ class BluePrintShortcutBlock(nn.Module):
 
 
 class BluePrintConvNeXt_SR(nn.Module):
-    def __init__(self, in_channels, out_channels, upscale_factor=2):
+    def __init__(self, in_channels, out_channels, upscale_factor=2, base_channels = 64):
         super().__init__()
-        self.conv1 = blueprint_conv_layer(in_channels, 64, 3)
-        self.convNext1 = BluePrintShortcutBlock(64, 64, 3)
-        self.convNext2 = BluePrintShortcutBlock(64, 64, 3)
-        self.convNext3 = BluePrintShortcutBlock(64, 64, 3)
-        self.convNext4 = BluePrintShortcutBlock(64, 64, 3)
-        self.convNext5 = BluePrintShortcutBlock(64, 64, 3)
-        self.convNext6 = BluePrintShortcutBlock(64, 64, 3)
+        self.conv1 = blueprint_conv_layer(in_channels, base_channels, 3)
+        self.convNext1 = BluePrintShortcutBlock(base_channels, base_channels, 3)
+        self.convNext2 = BluePrintShortcutBlock(base_channels, base_channels, 3)
+        self.convNext3 = BluePrintShortcutBlock(base_channels, base_channels, 3)
+        self.convNext4 = BluePrintShortcutBlock(base_channels, base_channels, 3)
+        self.convNext5 = BluePrintShortcutBlock(base_channels, base_channels, 3)
+        self.convNext6 = BluePrintShortcutBlock(base_channels, base_channels, 3)
 
-        self.conv2 = blueprint_conv_layer(64*6, 64, 3)
-        self.upsample_block = pixelshuffle_block(64, out_channels, upscale_factor)
+        self.conv2 = blueprint_conv_layer(base_channels*6, base_channels, 3)
+        self.upsample_block = pixelshuffle_block(base_channels, out_channels, upscale_factor)
         self.activation = activation(act_type='gelu')
 
     def forward(self, x):

@@ -903,10 +903,15 @@ class Dataset(data.Dataset):
 
 # trainer class
 def normalize_latent(x):
-    x_min = x.amin(dim=(1, 2, 3, 4), keepdim=True)
-    x_max = x.amax(dim=(1, 2, 3, 4), keepdim=True)
-    x_norm = 2 * (x - x_min) / (x_max - x_min + 1e-8) - 1  # added small epsilon to avoid divide-by-zero
-    return x_norm
+    x_min = torch.amin(x, dim=(1, 2, 3, 4), keepdim=True)
+    x_max = torch.amax(x, dim=(1, 2, 3, 4), keepdim=True)
+
+    scale = (x_max - x_min + 1e-8) / 2
+    offset = x_min + scale
+
+    x_norm = (x - offset) / scale  # result in [-1, 1]
+
+    return x_norm, offset, scale
 
 
 class Trainer(object):
@@ -1022,7 +1027,7 @@ class Trainer(object):
                 # convert input block into latent space
                 with torch.no_grad():
                     latent_data = self.keyframe_model.inference_qlatent(data)
-                    latent_data = normalize_latent(latent_data)
+                    latent_data,_,_ = normalize_latent(latent_data)
                 
                 
                 # label_data = data

@@ -124,17 +124,18 @@ class Compressor(nn.Module):
         
         hyper_rate = hyper_rate.reshape(B, -1).sum(dim=-1)
         cond_rate = cond_rate.reshape(B, -1).sum(dim=-1)
-        
+        frame_bit = hyper_rate + cond_rate
         bpp = (hyper_rate + cond_rate) / n_pixels
-        return bpp, hyper_rate/n_pixels, cond_rate/n_pixels
+        return frame_bit, bpp,  hyper_rate/n_pixels, cond_rate/n_pixels
 
     def forward(self, input):
         q_latent, q_hyper_latent, state4bpp, mean, scale = self.encode(input)
-        bpp,hbpp,cbpp = self.bpp(input.shape, state4bpp)
+        frame_bit, bpp,hbpp,cbpp = self.bpp(input.shape, state4bpp)
         output = self.decode(q_latent)
         return {
             "output": output,
             "bpp": bpp,
+            "frame_bit":frame_bit,
             "hbpp":hbpp,
             "cbpp":cbpp,
             "mean": mean,
