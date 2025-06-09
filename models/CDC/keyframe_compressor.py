@@ -16,17 +16,6 @@ def load_yaml(file_path):
 
 def super_resolution_model(img_size = 64, in_chans=32, out_chans=1, sr_dim = "HAT", pretrain = False, sr_type = "BCRN"):
     
-    if sr_type == "HAT":
-        yaml_file = load_yaml("./configs/HAT-S_SRx4.yml")
-        network_g = yaml_file['network_g']
-        network_g["img_size"]=img_size
-        network_g["in_chans"]=in_chans
-        network_g["out_chans"]=out_chans
-        sr_model = HAT(**network_g)
-        loaded_params, not_loaded_params = sr_model.load_part_model("./pretrain/HAT-S_SRx4.pth")
-        print("Loading HAT model")
-        return sr_model, loaded_params, not_loaded_params
-    
     if sr_type == "BCRN":
         sr_model = BluePrintConvNeXt_SR(in_chans, 1, 4, sr_dim)
         if pretrain:
@@ -207,9 +196,6 @@ class Compressor(nn.Module):
         print(latent.shape, q_hyper_latent.shape)
         
         latent_string = self.range_coder.compress(latent, mean, scale)
-        # hyper_mean = self.prior.medians.detach().expand_as(hyper_latent)
-        # hyper_scale = torch.ones_like(hyper_latent)*h_scale
-        
         hyper_mean = self.prior.medians.detach()
         hyper_latent_string = self.range_coder.compress_hyperlatent(hyper_latent, hyper_mean)
         
@@ -224,7 +210,7 @@ class Compressor(nn.Module):
         state4bpp = {"latent": latent, "hyper_latent": hyper_latent, "mean":mean, "scale": scale}
         nbits_theory, bpp = self.bpp(x.shape, state4bpp)
         
-        print("nbits_theory", nbits_theory, "nbits_real", nbits_real,   nbits_real/nbits_theory.cpu())
+        # print("nbits_theory", nbits_theory, "nbits_real", nbits_real,   nbits_real/nbits_theory.cpu())
         
         if real:
             nbits = nbits_real
@@ -246,13 +232,8 @@ class Compressor(nn.Module):
     def decompress(self, latent_string, hyper_latent_string, original_shape, hyper_shape, device = "cuda"):
         B, _, T, _, _ = original_shape
         
-        hyper_scale = torch.ones(hyper_shape)*0.5
-        # hyper_mean = self.prior.medians.detach().expand_as(hyper_scale)
-        
         hyper_mean = self.prior.medians.detach()
         q_hyper_latent = self.range_coder.decompress_hyperlatent(hyper_latent_string, hyper_mean)
-        
-        # q_hyper_latent = self.range_coder.decompress(hyper_latent_string, hyper_mean, hyper_scale)
         
         mean, scale = self.hyper_decode(q_hyper_latent.to(device))
         

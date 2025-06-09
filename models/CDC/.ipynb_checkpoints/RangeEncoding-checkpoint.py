@@ -2,7 +2,7 @@ import math
 import torch
 import numpy as np
 from compressai.entropy_models import GaussianConditional
-from compressai.entropy_models.entropy_models_vbr import EntropyModelVbr
+# from compressai.entropy_models.entropy_models_vbr import EntropyModelVbr
 
 
 def _build_indexes(size):
@@ -32,7 +32,7 @@ class RangeCoder:
         self.gaussian.update()
         
         
-        self.hyper_entropy = EntropyModelVbr()
+        # self.hyper_entropy = EntropyModelVbr()
         
 
     def compress(self, latent, mean, scale):
