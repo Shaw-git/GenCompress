@@ -9,12 +9,19 @@ from tqdm import tqdm
 import argparse
 import shutil
 import time
-from models.CDC import keyframe_compressor as compress_modules
+from collections import OrderedDict
 import torch
 from utils import *
 from tools_online.compress.metrics import relative_rmse_error_ornl
 from tools_online.io.json_io import save_json
 
+
+def remove_module_prefix(state_dict):
+    new_state_dict = OrderedDict()
+    for k, v in state_dict.items():
+        new_key = k.replace("module.", "")  # remove 'module.' prefix
+        new_state_dict[new_key] = v
+    return new_state_dict
 
 def train_epoch_vae(model, loader, optimizer, scheduler, criterion, loss_beta, device, iteration = 0):
     """Train the model for one epoch."""
@@ -22,11 +29,17 @@ def train_epoch_vae(model, loader, optimizer, scheduler, criterion, loss_beta, d
     running_loss1 = 0.0
     running_loss2 = 0.0
     
+    start_time = time.time()
+    training_time = 0
+    
     for data_dict in loader:
         
         inputs  = data_dict["input"].to(device)
         targets = inputs
- 
+        
+        time1 = time.time()
+        
+        
         optimizer.zero_grad()
         results = model(inputs)
         
@@ -42,6 +55,9 @@ def train_epoch_vae(model, loader, optimizer, scheduler, criterion, loss_beta, d
         loss.backward()
         optimizer.step()
         scheduler.step()
+        
+        time2 = time.time()
+        training_time+=time2-time1
         
         running_loss1 += loss_mse.item() * inputs.size(0)
         running_loss2 += loss_bpp.item() * inputs.size(0)
@@ -129,6 +145,7 @@ def get_argument():
     parser.add_argument('--iterations', type=int, default=400, help='Number of epochs for training')
     
     parser.add_argument('--sr_dim', type=int, default=16, help='Number of epochs for training')
+    
     parser.add_argument('--lr', type=float, default=0.001, help='Learning rate')
     parser.add_argument('--lr_gamma', type=float, default=0.5, help='Learning rate gamma')
     
@@ -142,7 +159,7 @@ def get_argument():
     # Datatset
     parser.add_argument('--train_set', type=str, default="S3D")
     parser.add_argument('--test_set', type=str, default="E3SM_test")
-    parser.add_argument('--config', type=str, default="./configs/config_vae.yaml")
+    parser.add_argument('--config', type=str, default="./configs/config_vae3d.yaml")
 
     args = parser.parse_args()
     
@@ -160,7 +177,7 @@ if __name__ == "__main__":
     if not os.path.exists(save_path):
         os.makedirs(save_path)
     
-    shutil.copy(args.config, save_path+"/config_vae.yaml")
+    shutil.copy(args.config, save_path+"/config_vae3d.yaml")
 
     # Paths for model and JSON files
     model_path = os.path.join(save_path, f"model_bs{args.batch_size}_ep{args.iterations}k.pt")
@@ -184,31 +201,39 @@ if __name__ == "__main__":
 
     test_args = convert_args(args, train=False)
     test_datasets = build_dataset(test_args, syn_length = False)
-    test_loaders = [DataLoader(dataset, batch_size=args.batch_size, shuffle=False, num_workers=3) for dataset in test_datasets]
+    test_loaders = [DataLoader(dataset, batch_size=args.batch_size, shuffle=False, num_workers=2) for dataset in test_datasets]
     # Model and device setup
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     
     # main(args)
-    if args.sr_dim<=0:
-        model = compress_modules.ResnetCompressor(  dim= args.model_dim,
+    if args.sr_dim>0:
+        
+        from models.CDC import compress_modules3d_mid_SR as compress_modules
+        model = compress_modules.CompressorMix(  dim= args.model_dim,
                                                     dim_mults=[1,2,3,4],
-                                                    reverse_dim_mults=[4,3,2,1],
+                                                    reverse_dim_mults=[4,3,2],
                                                     hyper_dims_mults=[4,4,4],
                                                     channels = 1,
-                                                    out_channels = 1)
+                                                    out_channels = 1,
+                                                    d3=True,
+                                                    sr_dim = args.sr_dim)
+        print("Load Model with SR")
+        
     else:
-        model = compress_modules.CompressorSR(dim= args.model_dim,
-                                            dim_mults=[1,2,3,4],
-                                            reverse_dim_mults=[4,3,2],
-                                            hyper_dims_mults=[4,4,4],
-                                            channels = 1,
-                                            out_channels = 1,
-                                            sr_dim = args.sr_dim)
-        print("loading VAE2D model with SR")
-    
+        from models.CDC import compress_modules3d_mid as compress_modules
+        model = compress_modules.ResnetCompressor(dim= args.model_dim,
+                                                dim_mults=[1,2,3,4],
+                                                reverse_dim_mults=[4,3,2,1],
+                                                hyper_dims_mults=[4,4,4],
+                                                channels = 1,
+                                                out_channels = 1,
+                                                d3=True)
+        print("Load Model without SR")
+        
     if args.pretrain != "":
         print("Load pretrain model:", args.pretrain)
         state_dict = torch.load(args.pretrain)
+        state_dict = remove_module_prefix(state_dict)
         model.load_state_dict(state_dict)
         
     if torch.cuda.device_count() > 1:
@@ -241,8 +266,6 @@ if __name__ == "__main__":
 
         beta = args.init_beta if cur_iters < (args.iterations*args.beta_start) else args.end_beta
         
-        
-        
         mse_loss, bbp_loss, cur_iters = train_epoch_vae(model, train_loader, optimizer, scheduler, criterion, beta , device, cur_iters)
         train_loss = mse_loss + bbp_loss
         
@@ -267,7 +290,6 @@ if __name__ == "__main__":
                 nrmse = float(nrmse)
 
                 loggers[dname].update(model, cur_iters, nrmse, bpp, dname)
-                
                 loggers[dname].save_last_model(model)
                 
                 print(dname, f"Progress: {eval_index}/100 ,  Iter {cur_iters}, Train Loss: {train_loss:.6f} ({mse_loss:.6f} + {bbp_loss:.6f})", 
